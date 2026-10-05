@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: airpower-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && pip install --no-deps --ignore-requires-python progpy==1.7.1 && pip install --no-deps --no-build-isolation filterpy==1.4.5
+    startCommand: python -m tools.start_server
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.0
+      - key: AIRPOWER_DEMO_USERS
+        value: "1"
+      - key: AIRPOWER_AUTH
+        value: "on"
+      - key: AIRPOWER_CLASSIFICATION
+        value: "UNCLASSIFIED // SYNTHETIC DEMONSTRATION DATA"

@@ -1,6 +1,6 @@
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { api, localTime, Me, Meta, onUnauthorized, Permission } from "./api";
+import { api, localTime, Me, Meta, onUnauthorized, Permission, reportUrl } from "./api";
 import { AuthContext } from "./auth";
 import Readiness from "./Readiness";
 import Integration from "./Integration";
@@ -93,7 +93,7 @@ function Shell({ me, setMe }: { me: Me; setMe: (m: Me | null) => void }) {
           </label>
         )}
         {!tail && tab === "integration" && <span className="asof">Loaded {localTime(meta.loaded_utc, meta.utc_offset_h)} · run {meta.run}</span>}
-        {!tail && tab === "readiness" && can("export_reports") && <a className="x report" href={`/report/fleet?at=${encodeURIComponent(at)}`} target="_blank" rel="noreferrer">Fleet report</a>}
+        {!tail && tab === "readiness" && can("export_reports") && <a className="x report" href={reportUrl(`/report/fleet?at=${encodeURIComponent(at)}`)} target="_blank" rel="noreferrer">Fleet report</a>}
         <div className="who">
           <span title={`${user.username}`}><b>{user.display_name}</b> · {user.role_label}</span>
           {me.auth_enabled && <><button className="x" onClick={() => setPw(!pw)}>Password</button><button className="x" onClick={signOut}>Sign out</button></>}
@@ -124,7 +124,22 @@ function App() {
     api.me().then(setMe).catch((e) => setErr(String(e.message ?? e)));
     onUnauthorized.handler = () => setMe((m) => (m ? { ...m, user: null } : m));
   }, []);
-  if (err) return <main><p className="err">Cannot reach the AirPower API: {err}</p></main>;
+  if (err) return (
+    <main style={{ maxWidth: 620, margin: "60px auto", padding: 24, background: "#1c202a", borderRadius: 8, color: "#e2e8f0", border: "1px solid #334155" }}>
+      <h2 style={{ color: "#f87171", marginTop: 0 }}>Cannot reach AirPower API</h2>
+      <p style={{ color: "#94a3b8", fontSize: 14 }}>
+        The frontend is active, but the Python backend service is not reachable or still starting.
+      </p>
+      <div style={{ background: "#0f172a", padding: 12, borderRadius: 6, fontFamily: "monospace", fontSize: 13, color: "#fca5a5", margin: "14px 0", wordBreak: "break-all" }}>
+        {err}
+      </div>
+      <p style={{ fontSize: 14, fontWeight: 600, color: "#cbd5e1", marginBottom: 6 }}>Next Steps:</p>
+      <ol style={{ fontSize: 13, lineHeight: 1.7, color: "#94a3b8", paddingLeft: 20 }}>
+        <li>Deploy the AirPower backend on <b>Render</b> or <b>Railway</b> using the repository blueprint.</li>
+        <li>In Vercel project settings, set <code>VITE_API_URL</code> to your deployed backend URL (or configure <code>vercel.json</code> rewrites).</li>
+      </ol>
+    </main>
+  );
   if (!me) return <main><p className="muted">Loading…</p></main>;
   if (!me.user) return <SignIn classification={me.classification} onDone={setMe} />;
   return <Shell key={me.user.username} me={me} setMe={setMe} />;

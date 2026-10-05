@@ -173,6 +173,18 @@ def create_app(url=None, hums_key=None, auth=None, settings=None, warm=True):
     app = FastAPI(title="AirPower API", version="0.2.0", lifespan=lifespan, docs_url="/api/docs" if not cfg.auth else None,
                   redoc_url=None, openapi_url="/api/openapi.json" if not cfg.auth else None,
                   description="Integrated predictive maintenance and fleet availability (SIH 2026, PS 26249)")
+
+    from fastapi.middleware.cors import CORSMiddleware
+    cors_origins = [x.strip() for x in os.environ.get("AIRPOWER_CORS_ORIGINS", "*").split(",") if x.strip()]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins if cors_origins != ["*"] else ["*"],
+        allow_credentials=True,
+        allow_origin_regex=r".*" if cors_origins == ["*"] else None,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
     app.state.store = store
     app.state.cfg = cfg
     app.state.sessions = sessions
@@ -271,7 +283,7 @@ def create_app(url=None, hums_key=None, auth=None, settings=None, warm=True):
         h["Referrer-Policy"] = "no-referrer"
         h["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
         h["Cross-Origin-Opener-Policy"] = "same-origin"
-        h["Cross-Origin-Resource-Policy"] = "same-origin"
+        h["Cross-Origin-Resource-Policy"] = "cross-origin"
         h["X-Request-ID"] = rid
         h["X-Data-Classification"] = cfg.classification
         if "content-security-policy" not in h:
@@ -361,8 +373,9 @@ def create_app(url=None, hums_key=None, auth=None, settings=None, warm=True):
         secure = cfg.secure_cookies == "1" or (cfg.secure_cookies == "auto" and (
             request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https"))
         resp = JSONResponse(me_payload(u))
-        resp.set_cookie(COOKIE, sessions.issue(username), max_age=sessions.seconds, httponly=True, samesite="strict",
-                        secure=secure, path="/")
+        samesite = os.environ.get("AIRPOWER_COOKIE_SAMESITE", "none" if secure else "lax").lower()
+        resp.set_cookie(COOKIE, sessions.issue(username), max_age=sessions.seconds, httponly=True, samesite=samesite,
+                        secure=secure or samesite == "none", path="/")
         return resp
 
     @app.post("/api/auth/logout")
@@ -371,7 +384,9 @@ def create_app(url=None, hums_key=None, auth=None, settings=None, warm=True):
         u = request.state.user
         audit.log(store.eng, u["username"], "logout", role=u["role"], ip=client_ip(request))
         resp = JSONResponse({"status": "signed out"})
-        resp.delete_cookie(COOKIE, path="/")
+        is_https = request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https"
+        samesite = os.environ.get("AIRPOWER_COOKIE_SAMESITE", "none" if is_https else "lax").lower()
+        resp.delete_cookie(COOKIE, path="/", samesite=samesite, secure=is_https or samesite == "none")
         return resp
 
     @app.post("/api/auth/password")
@@ -924,8 +939,8 @@ def create_app(url=None, hums_key=None, auth=None, settings=None, warm=True):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--db", default=None)
-    ap.add_argument("--host", default="127.0.0.1")
-    ap.add_argument("--port", type=int, default=8000)
+    ap.add_argument("--host", default=os.environ.get("HOST", "0.0.0.0" if os.environ.get("PORT") else "127.0.0.1"))
+    ap.add_argument("--port", type=int, default=int(os.environ.get("PORT", "8000")))
     ap.add_argument("--no-auth", action="store_true", help="development only: no sign-in (loopback address only)")
     ap.add_argument("--demo-users", action="store_true", help="seed the demo accounts (deploy/demo_users.yaml) on an empty user table")
     a = ap.parse_args(argv)

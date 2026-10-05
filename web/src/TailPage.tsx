@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AircraftDetail, api, localTime, Meta, pct, Risk, TailTwin } from "./api";
+import { AircraftDetail, api, localTime, Meta, pct, reportUrl, Risk, TailTwin } from "./api";
 import { Chart, css } from "./Chart";
 import { Legend } from "./Readiness";
 import { useAuth } from "./auth";
@@ -68,7 +68,7 @@ export default function TailPage({ tail, at, meta, back }: { tail: string; at: s
           <div className="muted">MSN {a.msn} · type {a.type} · {a.unit} · {a.base}{a.hums_unit ? ` · HUMS ${a.hums_unit}` : ""} · flying {t.usage_fh_per_day.toFixed(2)} FH/day
             {t.status?.reason ? ` · ${t.status.reason} since ${localTime(t.status.since, off)}` : ""}</div>
         </div>
-        {can("export_reports") && <a className="x" style={{ marginLeft: "auto", textDecoration: "none" }} href={`/report/aircraft/${a.tail}?at=${encodeURIComponent(at)}`} target="_blank" rel="noreferrer">Aircraft report (print / PDF)</a>}
+        {can("export_reports") && <a className="x" style={{ marginLeft: "auto", textDecoration: "none" }} href={reportUrl(`/report/aircraft/${a.tail}?at=${encodeURIComponent(at)}`)} target="_blank" rel="noreferrer">Aircraft report (print / PDF)</a>}
       </div>
 
       <div className="card">

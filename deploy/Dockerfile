@@ -26,7 +26,7 @@ COPY airpower/ airpower/
 COPY server/ server/
 COPY data_prep/ data_prep/
 COPY tools/ tools/
-COPY deploy/demo_users.yaml deploy/demo_users.yaml
+COPY deploy/ deploy/
 COPY --from=web /web/dist web/dist
 RUN mkdir -p outputs data && chown -R airpower:airpower /app/outputs
 USER 10001
@@ -34,4 +34,4 @@ EXPOSE 8000
 ENV AIRPOWER_DB=sqlite:////app/outputs/airpower.sqlite AIRPOWER_AUTH=on
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
   CMD python -c "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=4).status == 200 else 1)"
-CMD ["python", "-m", "server.app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "tools.start_server", "--host", "0.0.0.0"]

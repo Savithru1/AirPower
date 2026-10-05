@@ -155,9 +155,16 @@ export class ApiError extends Error {
 // a 401 anywhere means the session ended: the shell shows the sign-in screen
 export const onUnauthorized = { handler: () => undefined as void };
 
+export const API_BASE = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+
+export function reportUrl(path: string): string {
+  return API_BASE ? `${API_BASE}${path}` : path;
+}
+
 async function call<T>(path: string, method: string, body?: unknown): Promise<T> {
-  const r = await fetch(path, {
-    method, credentials: "same-origin",
+  const url = API_BASE ? `${API_BASE}${path}` : path;
+  const r = await fetch(url, {
+    method, credentials: API_BASE ? "include" : "same-origin",
     headers: { "X-Requested-With": "airpower", ...(body !== undefined ? { "Content-Type": "application/json" } : {}) },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
@@ -165,7 +172,7 @@ async function call<T>(path: string, method: string, body?: unknown): Promise<T>
     let detail = await r.text();
     try { detail = (JSON.parse(detail) as { detail?: string }).detail ?? detail; } catch { /* plain text */ }
     if (r.status === 401 && path !== "/api/auth/login") onUnauthorized.handler();
-    throw new ApiError(r.status, detail, path);
+    throw new ApiError(r.status, detail, url);
   }
   return r.json() as Promise<T>;
 }

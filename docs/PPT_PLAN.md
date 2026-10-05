@@ -116,8 +116,8 @@ Honesty line in small print at the bottom: "fleet is simulated; its sensor signa
 Footer line: **all open source → ₹0 in licences** (checked against `THIRD_PARTY.md`: MIT / BSD / Apache; ProgPy is NASA-1.3; psycopg is LGPL).
 
 **Top-middle box, "Prototype running live: open demo":** link, plus a *progress strip*. Do **not** use a made-up
-percentage. Use the real one: **8 of 9 phases done** (Phases 0-7: setup · fleet simulator · integration · health
-models · records & reliability · spares & planner · policy study & twin · dashboard; Phase 8, hardening, in progress), bar filled 8 / 9.
+percentage. Use the real one: **All 9 phases done** (Phases 0-7: setup · fleet simulator · integration · health
+models · records & reliability · spares & planner · policy study & twin · dashboard; Phase 8: hardening and security), bar full.
 
 **Top-right strip (replaces AeroTwin's "78 kbps → 3.3 kbps" link strip), "Messy in, clean out":**
 `4 systems` → `11 fault types injected, 2,061 faults` → `integration layer` → `2,058 fixed` (99.9 %) → `10,234 / 10,234 HUMS downloads on the right sortie`.
@@ -165,7 +165,7 @@ with *Risks → How We Handle Them* under the middle and right columns.
 
 **Viability (right, 4 rows):**
 - **Advice only**: planner recommends, officer accepts or overrides, every decision logged
-- **Role-based access** + audit log *(confirm Phase 8 is finished before printing this row)*
+- **Role-based access** + audit log *(built and tested in Phase 8)*
 - **On-prem, air-gapped** Docker deploy
 - **Swappable fleet**: generic types today, real formats via adapters
 
@@ -193,7 +193,7 @@ the left (red borders), **BENEFITS** cards on the right (green borders), two ico
 | Waiting for parts | **12.5 % → 5.1 %** aircraft-days | stock moves to rotor blades, gearboxes, actuators | VALIDATION §8 |
 | Planning | **640 vs 695** aircraft-days down | **115 vs 126** separate inductions | VALIDATION §9 |
 | Surge (+40 % flying) | **2 vs 14** aircraft-days short | 29 of 33 removals bundled | VALIDATION §9 |
-| Prediction on top | **+~2 pts** over reactive at equal stock *(provisional, §8 below)* | ~9 pts with METRIC stock *(provisional)* | policy study |
+| Prediction on top | **+1.4 pts** over reactive at equal stock | **+9.5 pts** with METRIC stock (84.6 % vs 75.2 %) | VALIDATION §12 |
 
 **Benefits (by who uses it):**
 
@@ -246,8 +246,8 @@ AeroTwin table was ticked by judgement and AirPower's rows are easier to challen
 | Number | Label | Source |
 |---|---|---|
 | **90.3 %** | defect text → ATA chapter (134k later real reports) | VALIDATION §6 |
-| **15.2** | engine RUL RMSE, cycles (FD001 official test) | VALIDATION §1 |
-| **87-94 %** | of true lives inside the 90 % band | VALIDATION §1 |
+| **15.4** | engine RUL RMSE, cycles (FD001 official test) | VALIDATION §1 |
+| **88-97 %** | of true lives inside the 90 % band | VALIDATION §1 |
 | **1.00** | gearbox fault detection AUC vs own baseline (CWRU) | VALIDATION §3 |
 | **0.785** | AUC pre-maintenance risk, 11,446 real flights | VALIDATION §2 |
 
@@ -266,27 +266,26 @@ Every number in the plan, where it lives, and whether it can change.
 | 640 vs 695 aircraft-days, 115 vs 126, 29 / 33, 2 vs 14 shortfall, 10 s solve | VALIDATION §9 | Final |
 | 2,061 injected / 2,058 handled, 97.8 % aircraft-days, 10,234 / 10,234 | VALIDATION §10 | Final (plan §15 says 97.9 % for an earlier run; use 97.8 %) |
 | Defect → ATA 90.3 % top-1, 134k test reports | VALIDATION §6 | Final |
-| RUL RMSE 15.2 (FD001), 87-94 % coverage; AUC 0.785 / 71.1 %; gearbox AUC 1.00 | VALIDATION §1-3 | Final |
+| RUL RMSE 15.4 (FD001), 88-97 % coverage; AUC 0.785 / 71.1 %; gearbox AUC 0.99-1.00 | VALIDATION §1-3 | Final |
 | Reactive baseline 75.5 % availability, 12.4 / 3.6 / 8.5 % | VALIDATION §11 | Final |
-| P2 predictive ≈ +1.8 pts over P0 at equal stock; P2 + METRIC ≈ 84.6 % | Phase 6 study | **Provisional**, see §8 |
+| P0 75.2 %; P1 +6.2 (74 % more stock); METRIC alone +6.5 ± 0.8; P2 at equal stock +1.4 ± 0.8; P2 + METRIC +9.5 ± 0.8 (84.6 %); gain gone at 1.5× model error, -1.1 at 2×, -5.6 at 3× | VALIDATION §12-13 | Final (30 paired years per arm) |
 | Fleet twin 30-day forecast inside its 95 % band in 3 of 3 held-out runs; availability off by 3.0, 1.6 and 3.4 pts (mean absolute 2.7; the mean signed error is -1.6, so do not print "within 1.6 pts") | `outputs/twin/twin_validation.json` | Final for these 3 runs |
 | 72 tests, 14.6k lines | counted 2026-10-05 | Recount at build time |
 
-## 8. Provisional until the Phase 6 re-run finishes
+## 8. How to frame the prediction result
 
-The policy study is being re-run in the other session (179 of 360 runs when this plan was written;
-`outputs/twin/policy_study_runs.jsonl`). Interim means from the finished arms: P2 76.5 %, P2 + METRIC 84.6 %.
-The earlier run is archived in `outputs/twin/archive/`. The plan and the memory note quote ≈ +1.8 pts for
-P2; **do not print any P2 or value-of-prediction figure until `outputs/twin/policy_study.json` exists
-again.** Recommended framing, because it is also the honest one: *stock reallocation is the big lever
-(+7.1 pts, final); prediction adds a smaller gain on top and the curve shows how that gain shrinks as
-the models get worse.*
+The Phase 6 policy study is final (VALIDATION §12-13). Lead with the honest ranking, which is also the strongest
+story for an expert judge: **stock reallocation is the big lever** (METRIC alone +6.5 pts, 11 % less stock; the Phase 5
+check on other seeds gave +7.1); **prediction adds a smaller gain on top** (+1.4 at equal stock, +2.9 on the METRIC stock,
++9.5 for both); and **the models must stay within about 1.5× their measured error** for prediction to pay. The weekly
+CP-SAT plan adds nothing measurable inside the simulator, so claim it only for plan accounting (640 vs 695 aircraft-days
+down, 115 vs 126 inductions, surge shortfall 2 vs 14). Do not print the old "≈ +1.8 pts" figure.
 
 ## 9. Decisions and gaps before building
 
 1. **Demo link.** Waiting for the team's Vercel link; both "click here" buttons (slide 6) use it. AirPower needs a backend as well as the built dashboard, so confirm what the Vercel page serves (static snapshot with baked data, or a hosted API) before screenshots are taken from it.
 2. **Team ID** for slide 1.
-3. **Phase 8** (RBAC, audit log, Docker) is in progress in the other session. Confirm it is done before the Viability row and the "role-based access" claim are printed.
+3. **Phase 8** is done (roles, hash-chained audit log, TLS, Docker files). The container image itself was never run locally (no container engine; CI builds it), so say "Docker-ready", not "deployed".
 4. **Sourced context statistics** for slide 5 and **sourced competitor cells** for slide 6 (§5, §6).
 5. **Budget and revenue split.** The business model on slide 4 and any doughnut need real numbers from the team, or stay off the slide.
 6. **Dashboard screenshots**: Readiness, Health map, a tail page (H2009 tail-rotor example from `DEMO.md`), Plan, Spares curve, What if. Capture after the store rebuild finishes, so the other session's run is not disturbed.
