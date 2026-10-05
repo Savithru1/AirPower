@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editors / OS
+.vscode/
+.idea/
+.claude/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Node / web build
+web/node_modules/
+web/dist/
+
+# Databases and generated outputs (FleetSim runs, stores, reports)
+*.sqlite
+*.sqlite3
+*.db
+outputs/
+
+# Real-data downloads and derived sets (see data/manifest.json)
+data/raw/
+data/processed/
+
+# Deployment secrets and certificates (python -m tools.init_deploy)
+deploy/secrets/
+deploy/certs/

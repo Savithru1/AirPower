@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Fleet readiness report{% endblock %}
+{% block body %}
+<header>
+  <div>
+    <h1>Fleet readiness and maintenance</h1>
+    <div class="sub">{{ units | length }} units &middot; {{ n_ac }} aircraft</div>
+  </div>
+  <div class="doc">As of {{ at | local }}</div>
+</header>
+
+<table class="kv"><tr>
+  <td><b>Serviceable now</b><span>{{ sv }} / {{ n_ac }}</span></td>
+  <td><b>Awaiting spares</b><span>{{ nmcs }}</span></td>
+  <td><b>In maintenance</b><span>{{ nmcm }}</span></td>
+  <td><b>Scheduled servicing</b><span>{{ sched }}</span></td>
+</tr></table>
+
+<h2>By unit</h2>
+<table><thead><tr><th>Unit</th><th>Type</th><th>Base</th><th class="n">Aircraft</th><th class="n">Serviceable</th><th class="n">In maintenance</th><th class="n">Awaiting spares</th><th class="n">Scheduled</th></tr></thead><tbody>
+{% for u in units %}<tr><td>{{ u.unit }}</td><td>{{ u.type }}</td><td>{{ u.base }}</td><td class="n">{{ u.aircraft }}</td><td class="n">{{ u.serviceable }}</td><td class="n">{{ u.nmcm }}</td><td class="n">{{ u.nmcs }}</td><td class="n">{{ u.scheduled }}</td></tr>{% endfor %}
+</tbody></table>
+
+{% if forecast %}
+<h2>Forecast: next {{ forecast.days }} days (fleet twin, {{ forecast.reps }} simulated futures)</h2>
+<p>Expected availability <b>{{ forecast.baseline.availability.mean | pct(1) }}</b>, flying task met {{ forecast.baseline.task_met.mean | pct(1) }};
+ lowest expected day {{ forecast.low.mean | pct }} on {{ forecast.low.day | day }} (10th percentile {{ forecast.low.p10 | pct }}).</p>
+{% endif %}
+
+<h2>What keeps aircraft on the ground</h2>
+{% if drivers %}
+<table><thead><tr><th>Part awaited</th><th class="n">Aircraft</th><th>Tails</th></tr></thead><tbody>
+{% for d in drivers %}<tr><td>{{ d.description }} ({{ d.pn }})</td><td class="n">{{ d.aircraft | length }}</td><td>{{ d.aircraft | join(", ") }}</td></tr>{% endfor %}
+</tbody></table>
+{% else %}<p class="muted">No aircraft awaiting spares.</p>{% endif %}
+
+<h2>Fleet health map: findings</h2>
+<table><thead><tr><th>Aircraft</th><th>System</th><th>Level</th><th>Finding</th></tr></thead><tbody>
+{% for f in findings %}<tr><td>{{ f.tail }}</td><td>{{ f.system }}</td><td><span class="badge l{{ f.level }}">{{ ["ok", "watch", "alert"][f.level] }}</span></td><td class="small">{{ f.note }}</td></tr>{% endfor %}
+</tbody></table>
+
+<h2>Priority actions</h2>
+<table><thead><tr><th>#</th><th>Aircraft</th><th>Action</th><th>Why</th><th>Source</th></tr></thead><tbody>
+{% for x in actions %}<tr><td class="p{{ x.priority }}">P{{ x.priority }}</td><td>{{ x.tail }}</td><td>{{ x.action }}</td><td class="small">{{ x.why }}</td><td class="small">{{ x.source }}</td></tr>{% endfor %}
+</tbody></table>
+
+{% if study %}
+<h2>Evidence: maintenance policy in the simulated fleet</h2>
+<p class="small muted">{{ study.reps }} paired simulated years per policy, one-year warm-up, two exercises a year.</p>
+<table><thead><tr><th>Policy</th><th class="n">Availability</th><th class="n">vs reactive (95 % CI)</th><th class="n">Flying task met</th><th class="n">In-service failures</th><th class="n">Stock value (INR cr)</th></tr></thead><tbody>
+{% for n in study.order %}{% set r = study.results[n] %}{% set d = study.paired_vs_P0.get(n) %}
+<tr><td>{{ n }}</td><td class="n">{{ r.availability.mean | pct(1) }}</td><td class="n">{% if d %}{{ "%+.1f" | format(100 * d.availability.mean) }} ± {{ "%.1f" | format(100 * d.availability.ci95) }} pts{% else %}–{% endif %}</td>
+<td class="n">{{ r.task_met.mean | pct(1) }}</td><td class="n">{{ r.in_service_failures.mean | num }}</td><td class="n">{{ (r.stock_value_lakh.mean / 100) | num }}</td></tr>{% endfor %}
+</tbody></table>
+{% endif %}
+{% endblock %}

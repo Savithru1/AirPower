@@ -1,0 +1,41 @@
+# Source-system registry: the conventions of each system, as documented when it is onboarded.
+# The integration layer reads only this file and the source exports, never FleetSim's truth/.
+records:
+  title: Technical records (servicing records)
+  time_format: "%d/%m/%Y %H:%M"
+  utc_offset_h: 5.5
+  locations: {BASE-N: BN, BASE-S: BS, DEPOT: DP}
+agencies:
+  title: Maintenance agency management system
+  time_format: "%Y-%m-%d %H:%M"
+  utc_offset_h: 5.5
+stores:
+  title: Stores / inventory system
+  date_format: "%d-%b-%y"
+  utc_offset_h: 5.5
+  locations: {"01": BN, "02": BS, "90": DP, "1": BN, "2": BS}
+hums:
+  title: HUMS ground station
+  time_format: "%Y-%m-%dT%H:%M:%SZ"
+  utc_offset_h: 0.0
+hums_config:                          # how each type's HUMS reports trend data (from the HUMS documentation)
+  engine_trend_cycle_fh: {J: 5.0, H: 4.0}   # engine hours per consolidated performance-trend snapshot
+  engine_model: {J: FD001, H: FD003}        # trend model trained on the matching engine data set
+  gearbox_positions: [MGB, IGB, TGB]
+  battery_position: BAT
+  battery_eol_soh: 0.75
+maintenance_programme:                # approved maintenance programme per type (intervals, level of maintenance)
+  J:
+    - {name: "50 h servicing",  interval_fh: 50,   level: O}
+    - {name: "150 h primary",   interval_fh: 150,  interval_days: 180,  level: I}
+    - {name: "Major servicing", interval_fh: 1200, interval_days: 2190, level: D}
+  H:
+    - {name: "25 h servicing",  interval_fh: 25,   level: O}
+    - {name: "100 h servicing", interval_fh: 100,  level: I}
+    - {name: "600 h / annual",  interval_fh: 600,  interval_days: 365,  level: I}
+    - {name: "Overhaul",        interval_fh: 2400, interval_days: 2920, level: D}
+linking:
+  hums_sortie_tolerance_min: 10       # HUMS flight start vs records take-off
+  duplicate_defect_window_h: 3        # same aircraft, similar text, raised within this window
+  duplicate_text_similarity: 80       # rapidfuzz token_set_ratio on normalised text
+  late_entry_h: 24                    # entered more than this after the event -> timeliness issue

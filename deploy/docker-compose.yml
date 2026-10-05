@@ -1,0 +1,82 @@
+# AirPower on one host. From the repository root:
+#   python -m tools.init_deploy                      # creates deploy/secrets/ (random values) and, for a demo, deploy/certs/
+#   docker compose -f deploy/docker-compose.yml up -d --build                     # app only, SQLite store, http on 127.0.0.1:8000
+#   docker compose -f deploy/docker-compose.yml --profile tls up -d --build       # + TLS proxy on https://127.0.0.1:8443
+#   docker compose -f deploy/docker-compose.yml --profile postgres --profile tls up -d --build   # + PostgreSQL / TimescaleDB
+# The data stays in ../outputs (store, models) and ../data (replay trajectories), mounted into the app.
+# The PostgreSQL path is written but was not run in the build environment (no container engine was running there).
+
+name: airpower
+
+x-hardening: &hardening
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  restart: unless-stopped
+
+services:
+  app:
+    <<: *hardening
+    build: {context: .., dockerfile: deploy/Dockerfile}
+    image: airpower:0.2
+    environment:
+      AIRPOWER_DB: ${AIRPOWER_DB:-sqlite:////app/outputs/airpower.sqlite}
+      AIRPOWER_SECRET_FILE: /run/secrets/airpower_secret
+      AIRPOWER_ADMIN_PASSWORD_FILE: /run/secrets/airpower_admin_password
+      AIRPOWER_CLASSIFICATION: ${AIRPOWER_CLASSIFICATION:-UNCLASSIFIED // SYNTHETIC DEMONSTRATION DATA}
+      AIRPOWER_SECURE_COOKIES: ${AIRPOWER_SECURE_COOKIES:-auto}
+      AEROTWIN_DATA: /data/aerotwin
+      AIRPOWER_TRUSTED_PROXY: 172.28.0.0/24      # the compose network: X-Forwarded-For is believed only from here
+    secrets: [airpower_secret, airpower_admin_password]
+    volumes:
+      - ../outputs:/app/outputs
+      - ../data:/app/data:ro
+      - ${AEROTWIN_DATA_DIR:-../data/processed}:/data/aerotwin:ro
+    tmpfs: [/tmp]
+    ports: ["127.0.0.1:8000:8000"]
+    depends_on:
+      db: {condition: service_healthy, required: false}
+
+  proxy:                                  # TLS termination in front of the app (profile tls)
+    <<: *hardening
+    profiles: [tls]
+    image: nginx:1.27-alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    tmpfs: [/var/cache/nginx, /var/run, /tmp]
+    cap_add: [CHOWN, SETGID, SETUID]
+    ports: ["127.0.0.1:8443:8443"]
+    depends_on: [app]
+
+  db:                                     # PostgreSQL with TimescaleDB (profile postgres)
+    <<: *hardening
+    profiles: [postgres]
+    image: timescale/timescaledb:2.17.2-pg16
+    environment:
+      POSTGRES_DB: airpower
+      POSTGRES_USER: airpower
+      POSTGRES_PASSWORD_FILE: /run/secrets/airpower_db_password
+    secrets: [airpower_db_password]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    tmpfs: [/tmp, /var/run/postgresql]
+    cap_add: [CHOWN, SETGID, SETUID, DAC_OVERRIDE, FOWNER]
+    read_only: false
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airpower -d airpower"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+secrets:
+  airpower_secret: {file: ./secrets/airpower_secret.txt}
+  airpower_admin_password: {file: ./secrets/airpower_admin_password.txt}
+  airpower_db_password: {file: ./secrets/airpower_db_password.txt}
+
+volumes:
+  pgdata:
+
+networks:
+  default:
+    ipam:
+      config: [{subnet: 172.28.0.0/24}]

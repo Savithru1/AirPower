@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Aircraft {{ t.aircraft.tail }} report{% endblock %}
+{% block body %}
+{% set a = t.aircraft %}
+<header>
+  <div>
+    <h1>Aircraft {{ a.tail }}</h1>
+    <div class="sub">MSN {{ a.msn }} &middot; type {{ a.type }} &middot; {{ a.unit }} &middot; base {{ a.base }}{% if a.hums_unit %} &middot; HUMS {{ a.hums_unit }}{% endif %}</div>
+  </div>
+  <div class="doc">As of {{ t.at | local }}<br>Status: <b>{{ t.status.status if t.status else "–" }}</b>{% if t.status and t.status.reason %} ({{ t.status.reason }}){% endif %}</div>
+</header>
+
+<table class="kv"><tr>
+  <td><b>Flying</b><span>{{ t.usage_fh_per_day | num(2) }} FH/day</span></td>
+  <td><b>Recommended actions</b><span>{{ t.actions | length }}</span></td>
+  <td><b>Life-limited items</b><span>{{ life | length }}</span></td>
+  <td><b>Defects in the records</b><span>{{ t.defects_total }}</span></td>
+</tr></table>
+
+<h2>Recommended actions</h2>
+{% if t.actions %}
+<table><thead><tr><th>#</th><th>Action</th><th>Why</th><th>Source</th></tr></thead><tbody>
+{% for x in t.actions %}<tr><td class="p{{ x.priority }}">P{{ x.priority }}</td><td>{{ x.action }}</td><td class="small">{{ x.why }}</td><td class="small">{{ x.source }}</td></tr>{% endfor %}
+</tbody></table>
+{% else %}<p class="muted">None.</p>{% endif %}
+
+<h2>Component health (HUMS)</h2>
+{% if risk %}
+<table><thead><tr><th>Position</th><th>Serial</th><th>Model</th><th class="n">Remaining life (FH)</th><th class="n">90 % interval</th><th class="n">P(removal &lt; 100 FH)</th><th>Status</th></tr></thead><tbody>
+{% for r in risk %}<tr><td>{{ r.position }}</td><td>{{ r.sn }}</td><td class="small">{{ r.model }}</td><td class="n">{{ r.rul_fh | num }}</td>
+<td class="n">{% if r.rul_fh_lo is not none %}{{ r.rul_fh_lo | num }}–{{ r.rul_fh_hi | num }}{% else %}–{% endif %}</td><td class="n">{{ r.p_fail_100fh | pct }}</td>
+<td><span class="badge l{{ {'ok': 0, 'watch': 1, 'alert': 2}[r.status] }}">{{ r.status }}</span></td></tr>{% endfor %}
+</tbody></table>
+{% else %}<p class="muted">No monitored components.</p>{% endif %}
+
+<h2>Life-limited parts</h2>
+<table><thead><tr><th>Position</th><th>Part</th><th>Serial</th><th>Limit</th><th class="n">Consumed</th><th>Basis</th><th>Due</th></tr></thead><tbody>
+{% for r in life %}<tr><td>{{ r.position }}</td><td>{{ r.pn }}</td><td>{{ r.sn }}</td><td>{{ r.limit }}</td>
+<td class="n"><span class="badge l{{ 2 if (r.consumed or 0) >= 1 else 1 if (r.consumed or 0) >= 0.9 else 0 }}">{{ r.consumed | pct }}</span></td><td class="small">{{ r.basis }}</td><td>{{ r.due | day }}</td></tr>{% endfor %}
+</tbody></table>
+
+<h2>Scheduled inspections</h2>
+<table><thead><tr><th>Inspection</th><th>Level</th><th>Last done</th><th class="n">FH since</th><th class="n">Due in (days)</th><th>Due</th></tr></thead><tbody>
+{% for r in ins %}<tr><td>{{ r.inspection }}</td><td>{{ r.level }}</td><td>{{ r.last_done | day }}</td><td class="n">{{ r.fh_since | num }}</td><td class="n">{{ r.days_to_due | num }}</td><td>{{ r.due | day }}</td></tr>{% endfor %}
+</tbody></table>
+
+<h2>Defect history</h2>
+<p class="small muted">{{ t.defects_total }} defects in the records; most frequent ATA chapters: {% for x in t.defects_by_ata %}{{ x.ata if x.ata is not none else "?" }} ({{ x.n }}){% if not loop.last %}, {% endif %}{% endfor %}. Latest 25:</p>
+<table><thead><tr><th>Defect</th><th>Raised</th><th>ATA</th><th>Report</th><th>Rectification</th></tr></thead><tbody>
+{% for d in defects[:25] %}<tr><td class="small">{{ d.defect_no }}</td><td class="small">{{ d.raised | local }}</td><td>{{ d.ata if d.ata is not none else "?" }}</td><td class="small">{{ d.text }}</td><td class="small">{{ d.rectification or "open" }}</td></tr>{% endfor %}
+</tbody></table>
+
+<h2>Configuration</h2>
+<table><thead><tr><th>Position</th><th>Part</th><th>Description</th><th>Serial</th><th class="n">Hours since overhaul</th></tr></thead><tbody>
+{% for c in config %}<tr><td>{{ c.position }}</td><td>{{ c.pn }}</td><td class="small">{{ c.description }}</td><td>{{ c.sn }}</td><td class="n">{{ c.tso_h_at_export | num }}</td></tr>{% endfor %}
+</tbody></table>
+{% endblock %}

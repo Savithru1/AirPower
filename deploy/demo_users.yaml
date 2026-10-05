@@ -1,0 +1,9 @@
+# DEMO ACCOUNTS ONLY. Loaded when the server starts with --demo-users (or AIRPOWER_DEMO_USERS=1) and the user table is empty.
+# Never use these in a real deployment: production creates its first administrator from AIRPOWER_ADMIN_PASSWORD
+# (or `python -m server.users create`) and keeps the server's own secret in AIRPOWER_SECRET.
+users:
+  - {username: commander, display_name: "Demo commander", role: commander, password: willow-juniper-harbor-basalt-32}
+  - {username: engineer, display_name: "Demo engineering officer", role: engineering_officer, password: nimbus-glacier-birch-larch-76}
+  - {username: logistics, display_name: "Demo logistics officer", role: logistics_officer, password: quartz-sable-onyx-birch-67}
+  - {username: analyst, display_name: "Demo analyst", role: analyst, password: cobalt-sable-onyx-indigo-91}
+  - {username: admin, display_name: "Demo administrator", role: admin, password: zephyr-onyx-larch-kestrel-60}

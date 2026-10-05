@@ -1,0 +1,10 @@
+# pytest configuration only (the project runs from the source tree, not installed).
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "data: needs the real datasets (C-MAPSS, AeroTwin processed data); skipped when absent",
+    "slow: runs a full simulated fleet year or more",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:progpy.*",
+]

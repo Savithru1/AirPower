@@ -1,0 +1,62 @@
+# Type H - generic twin-engine utility helicopter. Illustrative parameters, not any in-service
+# aircraft. Field meanings: see type_J.yaml.
+id: H
+name: Generic twin-engine utility helicopter
+inspections:
+  - {id: I25,   name: "25 h servicing",   interval_fh: 25,                         level: O, work_h: 8,   detect_p: 0.3}
+  - {id: I100,  name: "100 h servicing",  interval_fh: 100,                        level: I, work_h: 60,  detect_p: 0.6}
+  - {id: I600,  name: "600 h / annual",   interval_fh: 600,  interval_days: 365,   level: I, work_h: 240, detect_p: 0.75}
+  - {id: O2400, name: "Overhaul",         interval_fh: 2400, interval_days: 2920,  level: D, work_h: 800, detect_p: 0.9}
+snags: {rate_per_fh: 0.20, work_h: [0.5, 4.0], grounding_p: 0.55, recur_p: 0.12}
+positions:
+  - {pos: ENG,   name: Turboshaft engine,              ata: 72, qty: 2, pn: TS-1250-02, policy: CM, clock: fh,
+     hums: {kind: cmapss, subset: FD003, hours_per_cycle: 4.0, pf_cycles: 60}, life: {fh: 1800},
+     level: I, mttr_h: 20, tat: [60, 120], cost: 450, nff: 0.0, defer: 0.0}
+  - {pos: MGB,   name: Main gearbox,                   ata: 63, qty: 1, pn: MG-4010-01, policy: CM, clock: fh, weibull: [2.2, 2400], pf: 200,
+     hums: {kind: vibration, dataset: seu_gearbox}, life: {fh: 2000},
+     level: I, mttr_h: 36, tat: [90, 150], cost: 300, nff: 0.0, defer: 0.0}
+  - {pos: IGB,   name: Intermediate gearbox,           ata: 65, qty: 1, pn: IG-0420-02, policy: CM, clock: fh, weibull: [2.0, 2500], pf: 180,
+     hums: {kind: vibration, dataset: cwru_bearing}, life: {fh: 2500},
+     level: I, mttr_h: 12, tat: [60, 100], cost: 40, nff: 0.0, defer: 0.0}
+  - {pos: TGB,   name: Tail gearbox,                   ata: 65, qty: 1, pn: TG-0530-01, policy: CM, clock: fh, weibull: [2.0, 2200], pf: 180,
+     hums: {kind: vibration, dataset: cwru_bearing}, life: {fh: 2500},
+     level: I, mttr_h: 12, tat: [60, 100], cost: 45, nff: 0.0, defer: 0.0}
+  - {pos: MRB,   name: Main rotor blade,               ata: 62, qty: 4, pn: RB-7600-03, policy: HT, clock: fh, weibull: [2.5, 3500], pf: 300, life: {fh: 3000},
+     level: I, mttr_h: 8, tat: [60, 120], cost: 60, nff: 0.0, defer: 0.0, detect: 0.7}
+  - {pos: MRD,   name: Main rotor damper,              ata: 62, qty: 4, pn: RD-0335-02, policy: OC, clock: fh, weibull: [1.8, 900], pf: 100,
+     level: O, mttr_h: 4, tat: [30, 60], cost: 6, nff: 0.10, defer: 0.0, detect: 0.6}
+  - {pos: TRB,   name: Tail rotor blade,               ata: 64, qty: 2, pn: TB-1180-01, policy: HT, clock: fh, weibull: [2.5, 3000], pf: 300, life: {fh: 2500},
+     level: O, mttr_h: 6, tat: [45, 90], cost: 10, nff: 0.0, defer: 0.0, detect: 0.7}
+  - {pos: SWP,   name: Swashplate bearing assembly,    ata: 62, qty: 1, pn: SW-0900-01, policy: OC, clock: fh, weibull: [2.5, 2000], pf: 250,
+     level: I, mttr_h: 16, tat: [60, 120], cost: 25, nff: 0.0, defer: 0.0}
+  - {pos: HGRB,  name: Tail drive shaft hanger bearing, ata: 65, qty: 3, pn: HB-0077-04, policy: OC, clock: fh, weibull: [2.0, 1500], pf: 150,
+     level: O, mttr_h: 3, consumable: true, lead: [30, 60], cost: 0.8, nff: 0.0, defer: 0.0}
+  - {pos: HYDP,  name: Hydraulic pump,                 ata: 29, qty: 2, pn: HP-2210-01, policy: OC, clock: fh, weibull: [1.5, 1400], pf: 120,
+     level: O, mttr_h: 4, tat: [30, 60], cost: 10, nff: 0.10, defer: 0.0}
+  - {pos: SERVO, name: Main rotor servo actuator,      ata: 67, qty: 3, pn: MS-3300-02, policy: OC, clock: fh, weibull: [1.4, 2200], pf: 150,
+     level: O, mttr_h: 6, tat: [45, 90], cost: 18, nff: 0.10, defer: 0.0}
+  - {pos: AFCS,  name: AFCS actuator,                  ata: 22, qty: 3, pn: AF-0220-01, policy: OC, clock: fh, weibull: [1.2, 1800], pf: 0,
+     level: O, mttr_h: 2, tat: [30, 60], cost: 6, nff: 0.25, defer: 0.3}
+  - {pos: SGEN,  name: Starter-generator,              ata: 24, qty: 2, pn: SG-1700-01, policy: OC, clock: fh, weibull: [1.3, 1000], pf: 80,
+     level: O, mttr_h: 3, tat: [30, 60], cost: 9, nff: 0.15, defer: 0.4}
+  - {pos: BAT,   name: Main battery,                   ata: 24, qty: 1, pn: BT-0028-07, policy: CM, clock: fh,
+     hums: {kind: battery, fh_per_cycle: 2.0, eol_soh: 0.75}, life: {days: 730},
+     level: O, mttr_h: 1, consumable: true, lead: [30, 60], cost: 1.5, nff: 0.0, defer: 0.0}
+  - {pos: FCU,   name: Engine fuel control unit,       ata: 73, qty: 2, pn: FC-0870-03, policy: OC, clock: fh, weibull: [1.3, 2000], pf: 100,
+     level: O, mttr_h: 4, tat: [30, 60], cost: 12, nff: 0.15, defer: 0.0}
+  - {pos: FBP,   name: Fuel boost pump,                ata: 28, qty: 2, pn: BP-0330-02, policy: OC, clock: fh, weibull: [1.4, 2400], pf: 100,
+     level: O, mttr_h: 2, tat: [20, 45], cost: 3, nff: 0.15, defer: 0.5}
+  - {pos: VUHF,  name: V/UHF radio,                    ata: 23, qty: 2, pn: RC-1220-04, policy: OC, clock: fh, weibull: [1.0, 2800], pf: 0,
+     level: O, mttr_h: 1, tat: [20, 40], cost: 6, nff: 0.35, defer: 0.5}
+  - {pos: NAV,   name: GPS / INS unit,                 ata: 34, qty: 1, pn: IN-2200-01, policy: OC, clock: fh, weibull: [1.0, 2200], pf: 0,
+     level: O, mttr_h: 2, tat: [45, 90], cost: 15, nff: 0.30, defer: 0.0}
+  - {pos: MFD,   name: Multi-function display,         ata: 31, qty: 4, pn: DU-0640-02, policy: OC, clock: fh, weibull: [1.0, 3500], pf: 0,
+     level: O, mttr_h: 1, tat: [30, 60], cost: 9, nff: 0.30, defer: 0.6}
+  - {pos: RALT,  name: Radar altimeter,                ata: 34, qty: 1, pn: RA-0150-01, policy: OC, clock: fh, weibull: [1.0, 3000], pf: 0,
+     level: O, mttr_h: 1.5, tat: [30, 60], cost: 7, nff: 0.30, defer: 0.0}
+  - {pos: STRUT, name: Main landing gear shock strut,  ata: 32, qty: 2, pn: LG-1100-02, policy: OC, clock: cycles, weibull: [2.0, 3000], pf: 300,
+     level: O, mttr_h: 6, tat: [30, 60], cost: 8, nff: 0.0, defer: 0.0}
+  - {pos: TYRE,  name: Main wheel tyre,                ata: 32, qty: 2, pn: TY-0018-03, policy: OC, clock: cycles, weibull: [3.5, 300], pf: 60,
+     level: O, mttr_h: 1, consumable: true, lead: [20, 45], cost: 0.4, nff: 0.0, defer: 0.0, detect: 0.9}
+  - {pos: FIRE,  name: Engine fire detector loop,      ata: 26, qty: 2, pn: FD-0310-02, policy: OC, clock: fh, weibull: [1.1, 4000], pf: 0,
+     level: O, mttr_h: 2, tat: [20, 40], cost: 2, nff: 0.40, defer: 0.0}

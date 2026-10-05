@@ -1,0 +1,77 @@
+# FleetSim default fleet: two generic types, two operating bases and a depot.
+# Every number here is an illustrative, documented assumption (docs/IMPLEMENTATION_PLAN.md 4.2).
+name: default
+start_date: 2026-01-05          # a Monday; simulation t = 0 is 00:00 local time on this date
+days: 365
+utc_offset_h: 5.5               # local time (IST) = UTC + 5.5 h
+types: [type_J.yaml, type_H.yaml]
+
+bases:
+  BN: {name: Base North}
+  BS: {name: Base South}
+  DP: {name: Central Depot, depot: true}
+
+units:
+  - {id: 1SQN, type: J, base: BN, aircraft: 18, tail_start: 1001, msn_start: 7701,
+     flying: {sorties_per_day: 16, sortie_h: [0.8, 1.4], waves_h: [8.5, 11.0, 14.5], max_per_day: 2, landings_extra: 0.4}}
+  - {id: 2SQN, type: J, base: BS, aircraft: 18, tail_start: 1019, msn_start: 7719,
+     flying: {sorties_per_day: 16, sortie_h: [0.8, 1.4], waves_h: [8.5, 11.0, 14.5], max_per_day: 2, landings_extra: 0.4}}
+  - {id: 3HU,  type: H, base: BN, aircraft: 12, tail_start: 2001, msn_start: 5301,
+     flying: {sorties_per_day: 7, sortie_h: [1.2, 2.2], waves_h: [9.0, 13.5], max_per_day: 2, landings_extra: 1.5}}
+
+flying_weekdays: [0, 1, 2, 3, 4]            # Monday-Friday
+surges:                                      # exercises: flying task x factor, Saturdays flown
+  - {start_day: 120, days: 14, factor: 1.4}
+  - {start_day: 280, days: 10, factor: 1.5}
+
+# maintenance agencies; capacity = concurrent jobs (crews or bays), shift_h = working hours a day
+agencies:
+  - {id: BN-O-1SQN, level: O, base: BN, units: [1SQN], capacity: 4, shift_h: 16}
+  - {id: BN-O-3HU,  level: O, base: BN, units: [3HU],  capacity: 3, shift_h: 16}
+  - {id: BS-O-2SQN, level: O, base: BS, units: [2SQN], capacity: 4, shift_h: 16}
+  - {id: BN-I,      level: I, base: BN, capacity: 3, shift_h: 16}
+  - {id: BS-I,      level: I, base: BS, capacity: 2, shift_h: 16}
+  - {id: DP-D,      level: D, base: DP, capacity: 4, shift_h: 16}
+  # component repair shop: turnaround times already include normal shop flow, so capacity is
+  # sized not to bind at nominal load (~650 repairs a year x ~55 days = ~100 in work); it binds
+  # in surges
+  - {id: DP-SHOP,   level: S, base: DP, capacity: 140, shift_h: 8}
+
+delays:
+  admin_h: [1.0, 4.0]           # documentation / supervisor release after maintenance
+  issue_h: [0.5, 2.0]           # drawing a part from the base store
+  transfer_days: [2, 4]         # base <-> base, depot <-> base
+  ferry_days: 1                 # aircraft to / from depot for D-level work
+  troubleshoot_frac: 0.4        # share of mttr spent before the part is known
+
+stores:
+  service_level:                # initial stock = Poisson quantile of pipeline demand (P0 failure rates)
+    rotable: 0.85
+    consumable: 0.97
+  condemn_p: 0.05               # rotables scrapped at repair -> procurement
+  rotable_lead: [120, 300]      # procurement lead time for a condemned rotable, days
+  nff_tat_factor: 0.35          # no-fault-found units return faster
+  rogue_fraction: 0.04          # rotable serials with a manufacturing defect
+  rogue_factor: 0.3             # their Weibull scale is multiplied by this
+
+preventive:                     # used by policy P1
+  pm_fraction: 0.6              # replace OC / CM items at this share of their mean life
+
+hums:
+  types: [J, H]                 # types fitted with HUMS
+  missing_download_p: 0.03      # data card not downloaded after a sortie
+  noise: 0.01                   # relative measurement noise added to replayed signals
+
+# Deliberate fragmentation of the exported sources (Phase 2 must resolve or report every one).
+messiness:
+  defect_duplicate_p: 0.02
+  defect_missing_ata_p: 0.10
+  defect_late_entry_p: 0.10
+  wo_missing_defect_link_p: 0.08
+  serial_typo_p: 0.04
+  pn_format_variant_p: 0.25
+  stores_missing_tail_p: 0.05
+  stores_xref_missing_p: 0.06
+  hums_duplicate_upload_p: 0.01
+  text_typo_p: 0.04
+  supersessions: 3              # P/Ns superseded half-way through the run

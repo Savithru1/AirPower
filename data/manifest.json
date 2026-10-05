@@ -1,0 +1,143 @@
+{
+ "_doc": "Real-data sources for AirPower. location 'local': fetched by tools/fetch_real_data.py into data/raw/<id>/. location 'aerotwin': already fetched and prepared by AeroTwin, read in place from $AEROTWIN_DATA/<path> (not copied; NGAFID alone is ~15 GB raw). status: available | to_fetch | to_verify (licence or access still to be checked before use). See docs/IMPLEMENTATION_PLAN.md section 4.",
+ "sources": [
+  {
+   "id": "cmapss",
+   "title": "NASA C-MAPSS turbofan degradation simulation (Saxena et al. 2008), FD001-FD004",
+   "licence": "US Government work, public (NASA Prognostics Data Repository)",
+   "covers": "Engine RUL model (A1); run-to-failure trajectories replayed as engine HUMS in FleetSim (held-out units only, see data_prep/cmapss.py)",
+   "location": "local",
+   "status": "available",
+   "note": "Extracted text files copied from AeroTwin data/raw/cmapss/extracted on 2026-10-05; fetching the zip re-creates them (python -m data_prep.cmapss extract)",
+   "files": [
+    {
+     "url": "https://phm-datasets.s3.amazonaws.com/NASA/6.+Turbofan+Engine+Degradation+Simulation+Data+Set.zip",
+     "dest": "cmapss.zip",
+     "size": 12429152
+    }
+   ]
+  },
+  {
+   "id": "ngafid_2days",
+   "title": "NGAFID aviation maintenance dataset, 2-day subset (Yang et al. 2022, arXiv:2210.07317), harmonised by AeroTwin",
+   "licence": "CC-BY 4.0 (Zenodo 10.5281/zenodo.6624956)",
+   "covers": "Pre-maintenance risk (A2): 11,446 real flights before / after unplanned maintenance, 19 issue labels, 5 folds; healthy flights for detection thresholds (A5)",
+   "location": "aerotwin",
+   "status": "available",
+   "path": "processed/ngafid",
+   "files": [
+    {
+     "path": "processed/ngafid/ngafid_2days_labels.parquet"
+    },
+    {
+     "path": "processed/ngafid/ngafid_2days_flights"
+    }
+   ]
+  },
+  {
+   "id": "ngafid_all",
+   "title": "NGAFID all flights (28,935 flights), harmonised by AeroTwin",
+   "licence": "CC-BY 4.0 (Zenodo 10.5281/zenodo.6624956)",
+   "covers": "Larger healthy / unhealthy population for A2 and sensor statistics",
+   "location": "aerotwin",
+   "status": "available",
+   "path": "processed/ngafid",
+   "files": [
+    {
+     "path": "processed/ngafid/ngafid_all_labels.parquet"
+    },
+    {
+     "path": "processed/ngafid/ngafid_all_flights"
+    }
+   ]
+  },
+  {
+   "id": "vibration",
+   "title": "CWRU bearing + SEU gearbox vibration windows with edge DSP features, prepared by AeroTwin",
+   "licence": "CWRU: public research data, cite Smith & Randall 2015. SEU: research use with citation, not redistributed",
+   "covers": "Gearbox / bearing fault classes (A3); healthy-to-fault feature trajectories for helicopter gearbox HUMS in FleetSim",
+   "location": "aerotwin",
+   "status": "available",
+   "path": "processed/vibration",
+   "files": [
+    {
+     "path": "processed/vibration/windows.parquet"
+    }
+   ]
+  },
+  {
+   "id": "nasa_battery",
+   "title": "NASA Ames PCoE Li-ion battery ageing (Saha & Goebel 2007), per-cycle capacity, prepared by AeroTwin",
+   "licence": "US Government work, public (NASA Prognostics Data Repository)",
+   "covers": "Battery RUL (A4); capacity-fade trajectories for battery HUMS in FleetSim",
+   "location": "aerotwin",
+   "status": "available",
+   "path": "processed/battery",
+   "files": [
+    {
+     "path": "processed/battery/cycles.parquet"
+    }
+   ]
+  },
+  {
+   "id": "faa_sdrs",
+   "title": "FAA Service Difficulty Reports, calendar years 2020-2025 (one CSV per year)",
+   "licence": "US Government work (FAA), public; no use restrictions stated on the download page (checked 2026-10-05); not redistributed",
+   "covers": "Defect text -> ATA chapter (A7, label = first two digits of JASCCode); real repeat-defect and repeat-serial analysis (A8)",
+   "location": "local",
+   "status": "available",
+   "note": "Download page https://www.faa.gov/av-info/download_SDR; files served from external.apic4e.faa.gov without Content-Length",
+   "files": [
+    {
+     "url": "https://external.apic4e.faa.gov/sdrs/retrieve/SDR-2020.csv",
+     "dest": "SDR-2020.csv",
+     "size": null
+    },
+    {
+     "url": "https://external.apic4e.faa.gov/sdrs/retrieve/SDR-2021.csv",
+     "dest": "SDR-2021.csv",
+     "size": null
+    },
+    {
+     "url": "https://external.apic4e.faa.gov/sdrs/retrieve/SDR-2022.csv",
+     "dest": "SDR-2022.csv",
+     "size": null
+    },
+    {
+     "url": "https://external.apic4e.faa.gov/sdrs/retrieve/SDR-2023.csv",
+     "dest": "SDR-2023.csv",
+     "size": null
+    },
+    {
+     "url": "https://external.apic4e.faa.gov/sdrs/retrieve/SDR-2024.csv",
+     "dest": "SDR-2024.csv",
+     "size": null
+    },
+    {
+     "url": "https://external.apic4e.faa.gov/sdrs/retrieve/SDR-2025.csv",
+     "dest": "SDR-2025.csv",
+     "size": null
+    }
+   ]
+  },
+  {
+   "id": "maintnet",
+   "title": "MaintNet aviation maintenance logbook text (Akhbardeh et al., COLING 2020)",
+   "licence": "To verify",
+   "covers": "Abbreviation / typo normalisation and defect-text classification (A7)",
+   "location": "local",
+   "status": "to_verify",
+   "files": [],
+   "note": "Not needed for Phase 4: FAA SDRS provides labelled real defect text. Kept for abbreviation normalisation later."
+  },
+  {
+   "id": "ncmapss",
+   "title": "NASA N-CMAPSS turbofan run-to-failure under real flight conditions (Arias Chao et al. 2021)",
+   "licence": "US Government work, public (NASA Prognostics Data Repository)",
+   "covers": "Stretch RUL benchmark (A1)",
+   "location": "local",
+   "status": "to_fetch",
+   "files": []
+  }
+ ]
+}
